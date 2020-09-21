@@ -1,0 +1,29 @@
+logging:
+  level:
+    es.gortizlavado.league.app: DEBUG
+
+spring:
+  application:
+    name: players-microservice
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL95Dialect
+        default_schema: ${spring.application.name}
+        globally_quoted_identifiers: true
+        format_sql: true
+    hibernate:
+      ddl-auto: none
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations:
+      - classpath:db/migration/postgresql
+    schemas: ${spring.application.name}
+    init-sqls: CREATE SCHEMA IF NOT EXISTS "${spring.application.name}";
+    user: sa
+    password:
+
+server:
+  port: 8081
