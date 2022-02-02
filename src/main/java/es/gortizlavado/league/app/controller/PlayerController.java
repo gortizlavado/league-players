@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,27 +31,27 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public PlayerDTO getPlayerById(@PathVariable Long id, @RequestParam(required = false) String seasonId) {
+    public PlayerDTO getPlayerById(@PathVariable Long id) {
+        log.debug("Call getPlayerById with id: {}", id);
+        return playerService.fetchPlayerById(id);
+    }
+
+    @GetMapping("/{id}/{seasonId}")
+    public PlayerDTO getPlayerStatById(@PathVariable Long id, @PathVariable String seasonId) {
         log.debug("Call getPlayerById with id: {} for the season: {}", id, seasonId);
-        return playerService.fetchPlayerById(id, seasonId);
+        return playerService.fetchPlayerStatById(id, seasonId);
     }
 
-    @PostMapping
-    public void addPlayer(PlayerDTO playerDTO) {
-        log.debug("Call addPlayer with body: {}", playerDTO);
-        playerService.addPlayer(playerDTO);
+    @PutMapping("/{id}/{seasonId}")
+    public PlayerDTO savePlayer(@PathVariable Long id, @PathVariable String seasonId, PlayerDTO playerDTO) {
+        log.debug("Call savePlayer with id: {}-{} for body: {}", id, seasonId, playerDTO);
+        return playerService.savePlayer(id, seasonId, playerDTO);
     }
 
-    @PutMapping("/{id}")
-    public PlayerDTO replacePlayer(@PathVariable Long id, PlayerDTO playerDTO) {
-        log.debug("Call replacePlayer with id: {} for body: {}", id, playerDTO);
-        return playerService.replacePlayer(id, playerDTO);
-    }
-
-    @PatchMapping(path = "/{id}", consumes = "application/json-patch+json")
-    public PlayerDTO updatePlayer(@PathVariable Long id, JsonPatch patch) {
+    @PatchMapping(path = "/{id}/{seasonId}", consumes = "application/json-patch+json")
+    public PlayerDTO updatePlayer(@PathVariable Long id, @PathVariable String seasonId, JsonPatch patch) {
         log.debug("Call updatePlayer with id: {} for body: {}", id, patch);
-        return playerService.updatePlayer(id, patch);
+        return playerService.updatePlayer(id, seasonId, patch);
     }
 
     @GetMapping

@@ -13,8 +13,18 @@ public abstract class PlayerMapperDecorator implements PlayerMapper {
     private PlayerMapper delegate;
 
     @Override
-    public PlayerDTO fromPlayer(Player player, Stats stats) {
-        final PlayerDTO dto = delegate.fromPlayer(player, stats);
+    public PlayerDTO fromPlayer(Player player) {
+        final PlayerDTO dto = delegate.fromPlayer(player);
+        return addFullName(dto);
+    }
+
+    @Override
+    public PlayerDTO fromStat(Stats stats) {
+        final PlayerDTO dto = delegate.fromStat(stats);
+        return addFullName(dto);
+    }
+
+    private PlayerDTO addFullName(PlayerDTO dto) {
         dto.setFullName(dto.getName() + " " + dto.getLastname() + " " + dto.getSurname());
         return dto;
     }

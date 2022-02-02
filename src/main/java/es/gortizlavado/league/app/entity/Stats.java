@@ -5,10 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
 
@@ -28,6 +32,11 @@ public class Stats implements Serializable {
     @Id
     @Column(name = "player_id")
     private Long idPlayer;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @MapsId("idPlayer")
+    @JoinColumn(name="player_id", referencedColumnName="id")
+    private Player player;
 
     private int points;
 

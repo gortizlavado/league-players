@@ -7,13 +7,14 @@ import java.util.List;
 
 public interface PlayerService {
 
-    PlayerDTO fetchPlayerById(Long id, String seasonId);
+    PlayerDTO fetchPlayerById(Long id);
+
+    PlayerDTO fetchPlayerStatById(Long id, String seasonId);
 
     List<PlayerDTO> getAllPlayers();
 
-    void addPlayer(PlayerDTO playerDTO);
+    PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO);
 
-    PlayerDTO updatePlayer(final Long id, JsonPatch jsonPatch);
+    PlayerDTO updatePlayer(final Long id, String seasonId, JsonPatch jsonPatch);
 
-    PlayerDTO replacePlayer(final Long id, PlayerDTO playerDTO);
 }

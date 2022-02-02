@@ -61,6 +61,46 @@ class PlayerRepositoryTest {
         Assertions.assertEquals(10, stats2020Optional.get().getPoints());
     }
 
+    @Test
+    void shouldCreateNewEntry_whenPlayerIsCreated() {
+        final long initialCount = statsRepository.count();
+
+        Stats stats = Stats.builder()
+                .idPlayer(3L)
+                .season("2021/2022")
+                .matchPlayed(1)
+                .points(5)
+                .player(Player.builder()
+                        .id(3L)
+                        .name("footballer-new")
+                        .dateOfBirthday(LocalDate.of(1991, 2, 1))
+                        .position(Position.DEFENSE)
+                        .team(Team.NO_TEAM)
+                        .status(Status.ACTIVE).build()).build();
+
+        statsRepository.save(stats);
+
+        Assertions.assertEquals(initialCount + 1L, statsRepository.count());
+    }
+
+    @Test
+    void shouldDelete_whenPlayerIsDeleted() {
+        final long initialCount = statsRepository.count();
+
+        Player player = Player.builder()
+                .id(3L)
+                .name("footballer-new")
+                .dateOfBirthday(LocalDate.of(1991, 2, 1))
+                .position(Position.DEFENSE)
+                .team(Team.NO_TEAM)
+                .status(Status.ACTIVE).build();
+
+        playerRepository.save(player);
+
+        playerRepository.delete(player);
+        Assertions.assertEquals(initialCount, statsRepository.count());
+    }
+
     private void prepareDataInDDBB() {
         final List<Player> players = List.of(Player.builder()
                         .id(1L)

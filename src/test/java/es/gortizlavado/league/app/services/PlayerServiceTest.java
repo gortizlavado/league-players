@@ -1,11 +1,13 @@
 package es.gortizlavado.league.app.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import es.gortizlavado.league.app.dao.PlayerRepository;
 import es.gortizlavado.league.app.dao.StatsRepository;
 import es.gortizlavado.league.app.entity.Player;
 import es.gortizlavado.league.app.entity.Stats;
 import es.gortizlavado.league.app.entity.StatsId;
-import es.gortizlavado.league.app.exceptions.PlayerNotFoundException;
+import es.gortizlavado.league.app.exceptions.PlayerStatNotFoundException;
 import es.gortizlavado.league.app.mapper.PlayerMapper;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
 import org.junit.jupiter.api.Assertions;
@@ -18,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -36,50 +39,58 @@ class PlayerServiceTest {
     @Mock
     private PlayerMapper playerMapper;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @Test
-    void shouldReturnPlayer_whenStoredInDataBase() {
-        Mockito.when(playerRepository.findById(ArgumentMatchers.eq(0L)))
-                .thenReturn(Optional.of(Player.builder().build()));
+    void shouldReturnPlayerInAnySeason_whenStoredInDataBase() {
         Mockito.when(statsRepository.findById(ArgumentMatchers.eq(StatsId.builder().idPlayer(0L).season("currently-season-id").build())))
                 .thenReturn(Optional.of(Stats.builder().build()));
-        Mockito.when(playerMapper.fromPlayer(any(Player.class), any(Stats.class)))
+        Mockito.when(playerMapper.fromStat(any(Stats.class)))
                 .thenReturn(PlayerDTO.builder().build());
-        final PlayerDTO playerDTO = service.fetchPlayerById(0L, "currently-season-id");
+        final PlayerDTO playerDTO = service.fetchPlayerStatById(0L, "currently-season-id");
         Assertions.assertNotNull(playerDTO);
     }
 
     @Test
-    void shouldReturnPlayerWithoutSpecifySeason_whenStoredInDataBase() {
-        ReflectionTestUtils.setField(service,"currentlySeasonId", "2021/2022");
-        Mockito.when(playerRepository.findById(ArgumentMatchers.eq(0L)))
-                .thenReturn(Optional.of(Player.builder().build()));
+    void shouldReturnPlayerInCurrentSeason_whenSeasonIsNotSpecified() {
+        ReflectionTestUtils.setField(service, "currentlySeasonId", "2021/2022");
         Mockito.when(statsRepository.findById(ArgumentMatchers.eq(StatsId.builder().idPlayer(0L).season("2021/2022").build())))
                 .thenReturn(Optional.of(Stats.builder().build()));
-        Mockito.when(playerMapper.fromPlayer(any(Player.class), any(Stats.class)))
+        Mockito.when(playerMapper.fromStat(any(Stats.class)))
                 .thenReturn(PlayerDTO.builder().build());
-        final PlayerDTO playerDTO = service.fetchPlayerById(0L, "");
+        final PlayerDTO playerDTO = service.fetchPlayerStatById(0L, "");
         Assertions.assertNotNull(playerDTO);
     }
 
     @Test
     void shouldTrowException_whenNotStoredInDataBase() {
-        Mockito.when(playerRepository.findById(ArgumentMatchers.eq(0L))).thenReturn(Optional.empty());
-        Assertions.assertThrows(PlayerNotFoundException.class, () -> service.fetchPlayerById(0L, "currently-season-id"));
+        Mockito.when(statsRepository.findById(any(StatsId.class))).thenReturn(Optional.empty());
+        Assertions.assertThrows(PlayerStatNotFoundException.class, () -> service.fetchPlayerStatById(0L, "currently-season-id"));
     }
 
     @Test
-    void shouldReturnPlayerWithEmptyStats_whenStoredInDataBase() {
-        Mockito.when(playerRepository.findById(ArgumentMatchers.eq(0L))).thenReturn(Optional.of(Player.builder().build()));
-        Mockito.when(statsRepository.findById(any())).thenReturn(Optional.empty());
-        Mockito.when(playerMapper.fromPlayer(any(Player.class), any(Stats.class))).thenReturn(PlayerDTO.builder().build());
-        final PlayerDTO playerDTO = service.fetchPlayerById(0L, "currently-season-id");
-        Assertions.assertNotNull(playerDTO);
-        Assertions.assertNull(playerDTO.getPoints());
-        Assertions.assertNull(playerDTO.getMatchPlayed());
-        Assertions.assertNull(playerDTO.getGoals());
-        Assertions.assertNull(playerDTO.getGoalsByPenalty());
-        Assertions.assertNull(playerDTO.getYellowCards());
-        Assertions.assertNull(playerDTO.getDoubleYellowCards());
-        Assertions.assertNull(playerDTO.getRedCards());
+    void shouldUpdatePlayer() throws IOException {
+        ObjectMapper oMapper = new ObjectMapper();
+        Mockito.when(statsRepository.findById(ArgumentMatchers.eq(StatsId.builder().idPlayer(0L).season("2021/2022").build())))
+                .thenReturn(Optional.of(Stats.builder().player(Player.builder().name("name").lastname("lastname").build()).build()));
+        Mockito.when(playerMapper.fromStat(any(Stats.class)))
+                .thenReturn(PlayerDTO.builder().id("0").season("2021/2022").name("name").lastname("lastname").build());
+        Mockito.when(objectMapper.convertValue(any(), (Class<Object>) any()))
+                .thenReturn(oMapper.valueToTree(PlayerDTO.builder().id("0").season("2021/2022").name("name").lastname("lastname").build()));
+        Mockito.when(objectMapper.treeToValue(any(), any()))
+                .thenReturn(PlayerDTO.builder().id("0").season("2021/2022").name("new-name").build());
+        Mockito.when(playerMapper.toStats(any(PlayerDTO.class)))
+                .thenReturn(Stats.builder().idPlayer(1L).season("2021/2022").player(Player.builder().id(1L).name("new-name").build()).build());
+
+        JsonPatch patch = JsonPatch.fromJson(oMapper.readTree("[" +
+                "  { \"op\": \"replace\", \"path\": \"/name\", \"value\": \"new-name\" },\n" +
+                "  { \"op\": \"remove\", \"path\": \"/lastname\" }\n" +
+                "]"));
+
+        service.updatePlayer(0L, "2021/2022", patch);
+
+        Mockito.verify(statsRepository).save(Stats.builder().idPlayer(1L).season("2021/2022").player(Player.builder().id(1L).name("new-name").build()).build());
     }
+
 }

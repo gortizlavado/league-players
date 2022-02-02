@@ -13,6 +13,7 @@ import es.gortizlavado.league.app.entity.StatsId;
 import es.gortizlavado.league.app.exceptions.JsonPatchCustomException;
 import es.gortizlavado.league.app.exceptions.JsonProcessingCustomException;
 import es.gortizlavado.league.app.exceptions.PlayerNotFoundException;
+import es.gortizlavado.league.app.exceptions.PlayerStatNotFoundException;
 import es.gortizlavado.league.app.mapper.PlayerMapper;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
 import lombok.RequiredArgsConstructor;
@@ -41,14 +42,20 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlayerDTO fetchPlayerById(Long id, String seasonId) {
+    public PlayerDTO fetchPlayerById(Long id) {
         final Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
+        return playerMapper.fromPlayer(player);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PlayerDTO fetchPlayerStatById(Long id, String seasonId) {
         final Stats stats = statsRepository.findById(StatsId.builder()
                 .idPlayer(id)
-                .season(StringUtils.isEmpty(seasonId) ? currentlySeasonId : seasonId)
-                .build()).orElse(new Stats());
-        return playerMapper.fromPlayer(player, stats);
+                .season(StringUtils.hasLength(seasonId) ? seasonId: currentlySeasonId)
+                .build()).orElseThrow(() -> new PlayerStatNotFoundException(id, seasonId));
+        return playerMapper.fromStat(stats);
     }
 
     @Override
@@ -57,42 +64,30 @@ public class PlayerServiceImpl implements PlayerService {
         List<Player> listPlayer = (List<Player>) playerRepository.findAll();
 
         return listPlayer.stream()
-                .map(player -> playerMapper.fromPlayer(player, Stats.builder().build()))
+                .map(playerMapper::fromPlayer)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public void addPlayer(PlayerDTO playerDTO) {
-        this.savePlayer(playerDTO);
-    }
-
-    @Override
-    @Transactional
-    public PlayerDTO replacePlayer(final Long id, PlayerDTO playerDTO) {
+    public PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO) {
         playerDTO.setId(String.valueOf(id));
+        playerDTO.setSeason(seasonId);
         return savePlayer(playerDTO);
     }
 
     @Override
     @Transactional
-    public PlayerDTO updatePlayer(final Long id, JsonPatch jsonPatch) {
-        final PlayerDTO playerDTO = this.fetchPlayerById(id);
+    public PlayerDTO updatePlayer(final Long id, String seasonId, JsonPatch jsonPatch) {
+        final PlayerDTO playerDTO = this.fetchPlayerStatById(id, seasonId);
         final PlayerDTO playerPatched = applyPatchToPlayerDTO(id, jsonPatch, playerDTO);
         return savePlayer(playerPatched);
     }
 
-    private PlayerDTO fetchPlayerById(Long id) {
-        return fetchPlayerById(id, null);
-    }
-
     private PlayerDTO savePlayer(PlayerDTO playerDTO) {
-        Player player = playerMapper.toPlayer(playerDTO);
         Stats stats = playerMapper.toStats(playerDTO);
-
-        final Player playerSaved = playerRepository.save(player);
         final Stats statsSaved = statsRepository.save(stats);
-        return playerMapper.fromPlayer(playerSaved, statsSaved);
+        return playerMapper.fromStat(statsSaved);
     }
 
     private PlayerDTO applyPatchToPlayerDTO(Long id, JsonPatch jsonPatch, PlayerDTO playerDTO) {

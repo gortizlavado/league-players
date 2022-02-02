@@ -27,10 +27,10 @@ class AgeMapperTest {
         Mockito.when(clock.instant()).thenReturn(Instant.parse("2021-01-13T00:00:00.00Z"));
         Mockito.when(clock.getZone()).thenReturn(ZoneOffset.UTC);
 
-        Assertions.assertEquals(35, ageMapper.calculateFrom(LocalDate.of(1986,1,12)));
+        Assertions.assertEquals(35, ageMapper.calculateFrom(LocalDate.of(1986, 1, 12)));
 
-        Assertions.assertEquals(35, ageMapper.calculateFrom(LocalDate.of(1986,1,13)));
+        Assertions.assertEquals(35, ageMapper.calculateFrom(LocalDate.of(1986, 1, 13)));
 
-        Assertions.assertEquals(34, ageMapper.calculateFrom(LocalDate.of(1986,1,14)));
+        Assertions.assertEquals(34, ageMapper.calculateFrom(LocalDate.of(1986, 1, 14)));
     }
 }
