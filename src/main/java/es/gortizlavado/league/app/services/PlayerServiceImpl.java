@@ -16,6 +16,7 @@ import es.gortizlavado.league.app.exceptions.PlayerNotFoundException;
 import es.gortizlavado.league.app.exceptions.PlayerStatNotFoundException;
 import es.gortizlavado.league.app.mapper.PlayerMapper;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
+import es.gortizlavado.league.app.models.enums.Team;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,13 +60,16 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
+    public List<PlayerDTO> fetchPlayersByTeam(String id) {
+        final List<Player> listPlayer = playerRepository.findByTeam(Team.valueOf(id));
+        return fromPlayers(listPlayer);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<PlayerDTO> getAllPlayers() {
         List<Player> listPlayer = (List<Player>) playerRepository.findAll();
-
-        return listPlayer.stream()
-                .map(playerMapper::fromPlayer)
-                .collect(Collectors.toList());
+        return fromPlayers(listPlayer);
     }
 
     @Override
@@ -88,6 +92,12 @@ public class PlayerServiceImpl implements PlayerService {
         Stats stats = playerMapper.toStats(playerDTO);
         final Stats statsSaved = statsRepository.save(stats);
         return playerMapper.fromStat(statsSaved);
+    }
+
+    private List<PlayerDTO> fromPlayers(List<Player> listPlayer) {
+        return listPlayer.stream()
+                .map(playerMapper::fromPlayer)
+                .collect(Collectors.toList());
     }
 
     private PlayerDTO applyPatchToPlayerDTO(Long id, JsonPatch jsonPatch, PlayerDTO playerDTO) {

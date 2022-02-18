@@ -42,6 +42,12 @@ public class PlayerController {
         return playerService.fetchPlayerStatById(id, seasonId);
     }
 
+    @GetMapping("/team/{id}")
+    public List<PlayerDTO> getPlayersByTeam(@PathVariable String id) {
+        log.debug("Call getPlayerById with team id: {}", id);
+        return playerService.fetchPlayersByTeam(id);
+    }
+
     @PutMapping("/{id}/{seasonId}")
     public PlayerDTO savePlayer(@PathVariable Long id, @PathVariable String seasonId, PlayerDTO playerDTO) {
         log.debug("Call savePlayer with id: {}-{} for body: {}", id, seasonId, playerDTO);

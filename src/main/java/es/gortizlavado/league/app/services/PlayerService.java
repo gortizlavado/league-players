@@ -11,6 +11,8 @@ public interface PlayerService {
 
     PlayerDTO fetchPlayerStatById(Long id, String seasonId);
 
+    List<PlayerDTO> fetchPlayersByTeam(String id);
+
     List<PlayerDTO> getAllPlayers();
 
     PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO);
