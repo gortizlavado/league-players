@@ -6,6 +6,7 @@ import es.gortizlavado.league.app.models.dto.PlayerDTO;
 import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
 import es.gortizlavado.league.app.models.enums.Team;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.time.LocalDate;
 
 @SpringBootTest
+@AutoConfigureEmbeddedDatabase
 class PlayerMapperTest {
 
     @Autowired

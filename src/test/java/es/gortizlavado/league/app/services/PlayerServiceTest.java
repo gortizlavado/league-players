@@ -78,7 +78,7 @@ class PlayerServiceTest {
                 .thenReturn(PlayerDTO.builder().id("0").season("2021/2022").name("name").lastname("lastname").build());
         Mockito.when(objectMapper.convertValue(any(), (Class<Object>) any()))
                 .thenReturn(oMapper.valueToTree(PlayerDTO.builder().id("0").season("2021/2022").name("name").lastname("lastname").build()));
-        Mockito.when(objectMapper.treeToValue(any(), any()))
+        Mockito.when(objectMapper.treeToValue(any(), (Class<Object>) any()))
                 .thenReturn(PlayerDTO.builder().id("0").season("2021/2022").name("new-name").build());
         Mockito.when(playerMapper.toStats(any(PlayerDTO.class)))
                 .thenReturn(Stats.builder().idPlayer(1L).season("2021/2022").player(Player.builder().id(1L).name("new-name").build()).build());

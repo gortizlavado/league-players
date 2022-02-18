@@ -9,6 +9,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        session.events.log.LOG_QUERIES_SLOWER_THAN_MS: 30
         dialect: org.hibernate.dialect.PostgreSQL95Dialect
         default_schema: ${spring.application.name}
         globally_quoted_identifiers: true
