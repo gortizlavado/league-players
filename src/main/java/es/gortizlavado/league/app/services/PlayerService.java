@@ -4,12 +4,13 @@ import com.github.fge.jsonpatch.JsonPatch;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface PlayerService {
 
-    PlayerDTO fetchPlayerById(Long id);
+    PlayerDTO fetchPlayerById(UUID id);
 
-    PlayerDTO fetchPlayerStatById(Long id, String seasonId);
+    PlayerDTO fetchPlayerStatById(UUID id, String seasonId);
 
     List<PlayerDTO> fetchPlayersByTeam(String id);
 
@@ -17,6 +18,6 @@ public interface PlayerService {
 
     PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO);
 
-    PlayerDTO updatePlayer(final Long id, String seasonId, JsonPatch jsonPatch);
+    PlayerDTO updatePlayer(final UUID id, String seasonId, JsonPatch jsonPatch);
 
 }

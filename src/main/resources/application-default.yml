@@ -2,6 +2,10 @@ league-players:
   season:
     currently-id: "2020/2021"
 
+logging:
+  level:
+    org.hibernate: TRACE
+
 spring:
   flyway:
     locations:

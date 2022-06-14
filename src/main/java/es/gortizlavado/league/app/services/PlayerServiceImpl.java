@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +44,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlayerDTO fetchPlayerById(Long id) {
+    public PlayerDTO fetchPlayerById(UUID id) {
         final Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
         return playerMapper.fromPlayer(player);
@@ -51,7 +52,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional(readOnly = true)
-    public PlayerDTO fetchPlayerStatById(Long id, String seasonId) {
+    public PlayerDTO fetchPlayerStatById(UUID id, String seasonId) {
         final Stats stats = statsRepository.findById(StatsId.builder()
                 .idPlayer(id)
                 .season(StringUtils.hasLength(seasonId) ? seasonId: currentlySeasonId)
@@ -82,7 +83,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public PlayerDTO updatePlayer(final Long id, String seasonId, JsonPatch jsonPatch) {
+    public PlayerDTO updatePlayer(final UUID id, String seasonId, JsonPatch jsonPatch) {
         final PlayerDTO playerDTO = this.fetchPlayerStatById(id, seasonId);
         final PlayerDTO playerPatched = applyPatchToPlayerDTO(id, jsonPatch, playerDTO);
         return savePlayer(playerPatched);
@@ -100,7 +101,7 @@ public class PlayerServiceImpl implements PlayerService {
                 .collect(Collectors.toList());
     }
 
-    private PlayerDTO applyPatchToPlayerDTO(Long id, JsonPatch jsonPatch, PlayerDTO playerDTO) {
+    private PlayerDTO applyPatchToPlayerDTO(UUID id, JsonPatch jsonPatch, PlayerDTO playerDTO) {
         final JsonNode patched;
         try {
             final JsonNode jsonNode = objectMapper.convertValue(playerDTO, JsonNode.class);

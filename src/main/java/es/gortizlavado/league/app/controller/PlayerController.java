@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @Slf4j
@@ -31,13 +32,13 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public PlayerDTO getPlayerById(@PathVariable Long id) {
+    public PlayerDTO getPlayerById(@PathVariable UUID id) {
         log.debug("Call getPlayerById with id: {}", id);
         return playerService.fetchPlayerById(id);
     }
 
     @GetMapping("/{id}/{seasonId}")
-    public PlayerDTO getPlayerStatById(@PathVariable Long id, @PathVariable String seasonId) {
+    public PlayerDTO getPlayerStatById(@PathVariable UUID id, @PathVariable String seasonId) {
         log.debug("Call getPlayerById with id: {} for the season: {}", id, seasonId);
         return playerService.fetchPlayerStatById(id, seasonId);
     }
@@ -55,7 +56,7 @@ public class PlayerController {
     }
 
     @PatchMapping(path = "/{id}/{seasonId}", consumes = "application/json-patch+json")
-    public PlayerDTO updatePlayer(@PathVariable Long id, @PathVariable String seasonId, JsonPatch patch) {
+    public PlayerDTO updatePlayer(@PathVariable UUID id, @PathVariable String seasonId, JsonPatch patch) {
         log.debug("Call updatePlayer with id: {} for body: {}", id, patch);
         return playerService.updatePlayer(id, seasonId, patch);
     }

@@ -3,7 +3,12 @@ package es.gortizlavado.league.app.entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,10 +20,15 @@ import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @IdClass(StatsId.class)
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -31,7 +41,7 @@ public class Stats implements Serializable {
 
     @Id
     @Column(name = "player_id")
-    private Long idPlayer;
+    private UUID idPlayer;
 
     @OneToOne(cascade = CascadeType.ALL)
     @MapsId("idPlayer")
@@ -59,4 +69,18 @@ public class Stats implements Serializable {
 
     @Column(name = "red_cards")
     private int redCards;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Stats stats = (Stats) o;
+        return season != null && Objects.equals(season, stats.season)
+                && idPlayer != null && Objects.equals(idPlayer, stats.idPlayer);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(season, idPlayer);
+    }
 }

@@ -7,21 +7,28 @@ import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
 import es.gortizlavado.league.app.models.enums.Team;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import io.zonky.test.db.flyway.OptimizedFlywayTestExecutionListener;
+import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
-@AutoConfigureEmbeddedDatabase
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class,
+        OptimizedFlywayTestExecutionListener.class})
+@AutoConfigureEmbeddedDatabase(
+        provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY,
+        refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_EACH_TEST_METHOD)
 class PlayerRepositoryTest {
 
     @Autowired
@@ -30,21 +37,57 @@ class PlayerRepositoryTest {
     @Autowired
     private StatsRepository statsRepository;
 
-    @BeforeEach
-    void setUp() {
-        prepareDataInDDBB();
+    @Test
+    @FlywayTest
+    void shouldBeOneRecord_whenPutPlayer() {
+
+        var newPlayer = Player.builder()
+                .name("footballer-new")
+                .dateOfBirthday(LocalDate.of(1991, 2, 1))
+                .position(Position.DEFENSE)
+                .team(Team.NO_TEAM)
+                .status(Status.ACTIVE).build();
+
+        Player playerSaved = playerRepository.save(newPlayer);
+
+        Assertions.assertEquals(1, playerRepository.count());
+        Assertions.assertNotNull(playerSaved);
+        Assertions.assertNotNull(playerSaved.getId());
+
+        final Optional<Player> playerRepositoryById = playerRepository.findById(playerSaved.getId());
+        Assertions.assertNotNull(playerRepositoryById.orElseThrow().getCreatedAt());
     }
 
     @Test
-    void shouldFetchPlayerNumberOne() {
-        final Optional<Player> playerOptional = playerRepository.findById(1L);
-        Assertions.assertTrue(playerOptional.isPresent());
-        Assertions.assertEquals("footballer-one", playerOptional.get().getName());
+    @FlywayTest
+    void shouldBeOneRecord_whenPutPlayerWithId() {
+        // If you provide your own id value then Spring Data will assume that you need to check the DB
+        // for a duplicate key (hence the select+insert).
+        final UUID uuid = UUID.randomUUID();
+        System.out.println("UUID: " + uuid);
+        var newPlayer = Player.builder()
+                .id(uuid)
+                .name("footballer-new")
+                .dateOfBirthday(LocalDate.of(1991, 2, 1))
+                .position(Position.DEFENSE)
+                .team(Team.NO_TEAM)
+                .status(Status.ACTIVE).build();
+
+        Player playerSaved = playerRepository.save(newPlayer);
+
+        Assertions.assertEquals(1, playerRepository.count());
+        Assertions.assertNotNull(playerSaved);
+        Assertions.assertEquals(uuid, playerSaved.getId());
+
+        final Optional<Player> playerRepositoryById = playerRepository.findById(playerSaved.getId());
+        Assertions.assertNotNull(playerRepositoryById.orElseThrow().getCreatedAt());
     }
 
     @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
     void shouldFetchPlayerWithStats_whenStoredInDDBB() {
-        final Optional<Player> playerOptional = playerRepository.findById(2L);
+        final UUID uuid = UUID.fromString("00000002-f1b1-11ec-8ea0-0242ac120002");
+        final Optional<Player> playerOptional = playerRepository.findById(uuid);
         Assertions.assertTrue(playerOptional.isPresent());
         final Optional<Stats> stats2019Optional = statsRepository.findById(StatsId.builder()
                 .idPlayer(playerOptional.get().getId())
@@ -62,16 +105,18 @@ class PlayerRepositoryTest {
     }
 
     @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
     void shouldCreateNewEntry_whenPlayerIsCreated() {
         final long initialCount = statsRepository.count();
 
+        UUID newId = UUID.randomUUID();
         Stats stats = Stats.builder()
-                .idPlayer(3L)
+                .idPlayer(newId)
                 .season("2021/2022")
                 .matchPlayed(1)
                 .points(5)
                 .player(Player.builder()
-                        .id(3L)
+                        .id(newId)
                         .name("footballer-new")
                         .dateOfBirthday(LocalDate.of(1991, 2, 1))
                         .position(Position.DEFENSE)
@@ -84,11 +129,11 @@ class PlayerRepositoryTest {
     }
 
     @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
     void shouldDelete_whenPlayerIsDeleted() {
         final long initialCount = statsRepository.count();
 
         Player player = Player.builder()
-                .id(3L)
                 .name("footballer-new")
                 .dateOfBirthday(LocalDate.of(1991, 2, 1))
                 .position(Position.DEFENSE)
@@ -101,41 +146,4 @@ class PlayerRepositoryTest {
         Assertions.assertEquals(initialCount, statsRepository.count());
     }
 
-    private void prepareDataInDDBB() {
-        final List<Player> players = List.of(Player.builder()
-                        .id(1L)
-                        .name("footballer-one")
-                        .dateOfBirthday(LocalDate.of(1992, 5, 29))
-                        .position(Position.DEFENSE)
-                        .team(Team.CD_BADAJOZ)
-                        .status(Status.HURT).build(),
-                Player.builder()
-                        .id(2L)
-                        .name("footballer-two")
-                        .lastname("lastname-two")
-                        .surname("surname-two")
-                        .dateOfBirthday(LocalDate.of(1989, 11, 9))
-                        .position(Position.GOALKEEPER)
-                        .team(Team.CD_DON_BENITO)
-                        .status(Status.ACTIVE).build());
-
-        final List<Stats> stats = List.of(Stats.builder()
-                        .season("2020/2021")
-                        .idPlayer(2L)
-                        .points(10)
-                        .goals(1)
-                        .redCards(1)
-                        .build(),
-                Stats.builder()
-                        .season("2019/2020")
-                        .idPlayer(2L)
-                        .points(-6)
-                        .goals(0)
-                        .yellowCards(2)
-                        .redCards(1)
-                        .build());
-
-        playerRepository.saveAll(players);
-        statsRepository.saveAll(stats);
-    }
 }

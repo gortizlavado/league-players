@@ -12,21 +12,34 @@ import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
 import es.gortizlavado.league.app.models.enums.Team;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
+import io.zonky.test.db.flyway.OptimizedFlywayTestExecutionListener;
+import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-@ExtendWith({SpringExtension.class/*, FlywayTestExtension.class*/})
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureEmbeddedDatabase
+@TestExecutionListeners({DependencyInjectionTestExecutionListener.class,
+        OptimizedFlywayTestExecutionListener.class,
+        MockitoTestExecutionListener.class})
+@AutoConfigureEmbeddedDatabase(
+        provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY,
+        refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_EACH_TEST_METHOD)
 class PlayerServiceIntegrationTest {
 
     @Autowired
@@ -40,24 +53,22 @@ class PlayerServiceIntegrationTest {
     @Autowired
     private PlayerMapper playerMapper;
 
+    @Captor
+    ArgumentCaptor<Stats> statsCaptor;
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        prepareDataInDDBB();
-    }
-
-    //TODO failed with the version of the io.zonky.test:embedded-database-spring-test
-    // @FlywayTest(locationsForMigrate = "/db/migration")
     @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
     void shouldReturnPlayerInAnySeason_whenStoredInDataBase() {
-        statsRepository.findAll();
-        final PlayerDTO playerDTO = service.fetchPlayerStatById(2L, "2020/2021");
+        final UUID idPlayer = UUID.fromString("00000002-f1b1-11ec-8ea0-0242ac120002");
+        final PlayerDTO playerDTO = service.fetchPlayerStatById(idPlayer, "2020/2021");
         Assertions.assertNotNull(playerDTO);
     }
 
     @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
     void shouldPartialUpdatePlayer() throws IOException {
 
         JsonPatch patch = JsonPatch.fromJson(objectMapper.readTree("[" +
@@ -66,71 +77,35 @@ class PlayerServiceIntegrationTest {
                 "{ \"op\": \"replace\", \"path\": \"/matchPlayed\", \"value\": 4 }\n" +
                 "]"));
 
-        final PlayerDTO playerDTO = service.updatePlayer(2L, "2020/2021", patch);
+        final UUID idPlayer = UUID.fromString("00000002-f1b1-11ec-8ea0-0242ac120002");
+        final PlayerDTO playerDTO = service.updatePlayer(idPlayer, "2020/2021", patch);
 
         PlayerDTO expectedPlayerDTO = PlayerDTO.builder()
-                .id("2")
+                .id(idPlayer.toString())
                 .name("footballer-new")
-                .lastname("lastname-two")
-                .surname("surname-two")
-                .fullName("footballer-new lastname-two surname-two")
+                .lastname("lastname2")
+                .surname("surname2")
+                .fullName("footballer-new lastname2 surname2")
                 .dateOfBirthday(LocalDate.of(1989, 11, 9).toString())
                 .age(32)
-                .position(Position.GOALKEEPER.name())
-                .team(Team.CD_DON_BENITO.name())
+                .position(Position.FORWARD.name())
+                .team(Team.MERIDA_AD.name())
                 .status(Status.ACTIVE.name())
                 .season("2020/2021")
                 .points(15)
                 .matchPlayed(4)
-                .goals(1)
+                .goals(4)
                 .goalsConceded(0)
-                .goalsByPenalty(0)
-                .yellowCards(0)
+                .goalsByPenalty(1)
+                .yellowCards(1)
                 .doubleYellowCards(0)
-                .redCards(1)
+                .redCards(0)
                 .build();
 
         Assertions.assertEquals(expectedPlayerDTO, playerDTO);
-        Assertions.assertEquals(2, statsRepository.count());
-    }
 
-    private void prepareDataInDDBB() {
-        final List<Player> players = List.of(Player.builder()
-                        .id(1L)
-                        .name("footballer-one")
-                        .dateOfBirthday(LocalDate.of(1992, 5, 29))
-                        .position(Position.DEFENSE)
-                        .team(Team.CD_BADAJOZ)
-                        .status(Status.HURT).build(),
-                Player.builder()
-                        .id(2L)
-                        .name("footballer-two")
-                        .lastname("lastname-two")
-                        .surname("surname-two")
-                        .dateOfBirthday(LocalDate.of(1989, 11, 9))
-                        .position(Position.GOALKEEPER)
-                        .team(Team.CD_DON_BENITO)
-                        .status(Status.ACTIVE).build());
-
-        final List<Stats> stats = List.of(Stats.builder()
-                        .season("2020/2021")
-                        .idPlayer(2L)
-                        .points(10)
-                        .matchPlayed(3)
-                        .goals(1)
-                        .redCards(1)
-                        .build(),
-                Stats.builder()
-                        .season("2019/2020")
-                        .idPlayer(2L)
-                        .points(-6)
-                        .goals(0)
-                        .yellowCards(2)
-                        .redCards(1)
-                        .build());
-
-        playerRepository.saveAll(players);
-        statsRepository.saveAll(stats);
+        final Optional<Player> playerRepositoryById = playerRepository.findById(idPlayer);
+        Assertions.assertNotNull(playerRepositoryById.orElseThrow().getUpdated_at());
     }
 
 }

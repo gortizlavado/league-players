@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @SpringBootTest
 @AutoConfigureEmbeddedDatabase
@@ -23,11 +24,12 @@ class PlayerMapperTest {
 
     @Test
     void shouldDoMapperFromStat() {
+        final UUID idPlayerNew = UUID.randomUUID();
         final Stats stats = Stats.builder()
                 .season("season")
-                .idPlayer(0L)
+                .idPlayer(idPlayerNew)
                 .player(Player.builder()
-                        .id(0L)
+                        .id(idPlayerNew)
                         .name("name")
                         .lastname("last-name")
                         .surname("surname")
@@ -44,7 +46,7 @@ class PlayerMapperTest {
                 .redCards(0)
                 .build();
         final PlayerDTO expectedPlayerDTO = PlayerDTO.builder()
-                .id("0")
+                .id(idPlayerNew.toString())
                 .season("season")
                 .name("name")
                 .lastname("last-name")
@@ -67,8 +69,9 @@ class PlayerMapperTest {
 
     @Test
     void shouldDoMapperFromPlayer() {
+        final UUID idPlayerNew = UUID.randomUUID();
         final Player player = Player.builder()
-                .id(0L)
+                .id(idPlayerNew)
                 .name("name")
                 .lastname("last-name")
                 .surname("surname")
@@ -77,7 +80,7 @@ class PlayerMapperTest {
                 .status(Status.ACTIVE)
                 .build();
         final PlayerDTO expectedPlayerDTO = PlayerDTO.builder()
-                .id("0")
+                .id(idPlayerNew.toString())
                 .name("name")
                 .lastname("last-name")
                 .surname("surname")
@@ -101,8 +104,9 @@ class PlayerMapperTest {
 
     @Test
     void shouldDoMapperToStats() {
+        final UUID idPlayerNew = UUID.randomUUID();
         final PlayerDTO playerDTO = PlayerDTO.builder()
-                .id("0")
+                .id(idPlayerNew.toString())
                 .season("season")
                 .name("name")
                 .lastname("last-name")
@@ -122,7 +126,7 @@ class PlayerMapperTest {
                 .build();
         final Stats expectedStats = Stats.builder()
                 .season("season")
-                .idPlayer(0L)
+                .idPlayer(idPlayerNew)
                 .points(10)
                 .matchPlayed(1)
                 .goals(1)
@@ -131,7 +135,7 @@ class PlayerMapperTest {
                 .doubleYellowCards(0)
                 .redCards(0)
                 .player(Player.builder()
-                        .id(0L)
+                        .id(idPlayerNew)
                         .name("name")
                         .lastname("last-name")
                         .surname("surname")
@@ -146,8 +150,9 @@ class PlayerMapperTest {
 
     @Test
     void shouldDoMapperToPlayer() {
+        final UUID idPlayerNew = UUID.randomUUID();
         final PlayerDTO playerDTO = PlayerDTO.builder()
-                .id("0")
+                .id(idPlayerNew.toString())
                 .season("season")
                 .name("name")
                 .lastname("last-name")
@@ -166,7 +171,7 @@ class PlayerMapperTest {
                 .redCards(0)
                 .build();
         final Player expectedPlayer = Player.builder()
-                .id(0L)
+                .id(idPlayerNew)
                 .name("name")
                 .lastname("last-name")
                 .surname("surname")

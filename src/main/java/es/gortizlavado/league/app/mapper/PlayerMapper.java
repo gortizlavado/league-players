@@ -39,10 +39,15 @@ public interface PlayerMapper {
     PlayerDTO fromStat(Stats stats);
 
     @InheritInverseConfiguration
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updated_at", ignore = true)
+    @Mapping(target = "deleted_at", ignore = true)
+    @Mapping(target = "dateOfBirthday", source = "dateOfBirthday")
     Player toPlayer(PlayerDTO playerDTO);
 
     @InheritInverseConfiguration
     @Mapping(source = "id", target = "idPlayer")
+    @Mapping(target = "player.dateOfBirthday", source = "dateOfBirthday")
     Stats toStats(PlayerDTO playerDTO);
 
 }
