@@ -16,7 +16,7 @@ public interface PlayerService {
 
     List<PlayerDTO> getAllPlayers();
 
-    PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO);
+    PlayerDTO savePlayer(final UUID id, String seasonId, PlayerDTO playerDTO);
 
     PlayerDTO updatePlayer(final UUID id, String seasonId, JsonPatch jsonPatch);
 

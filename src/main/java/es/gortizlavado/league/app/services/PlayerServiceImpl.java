@@ -25,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,10 +55,13 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     @Transactional(readOnly = true)
     public PlayerDTO fetchPlayerStatById(UUID id, String seasonId) {
-        final Stats stats = statsRepository.findById(StatsId.builder()
-                .idPlayer(id)
-                .season(StringUtils.hasLength(seasonId) ? seasonId: currentlySeasonId)
-                .build()).orElseThrow(() -> new PlayerStatNotFoundException(id, seasonId));
+        final Stats stats = statsRepository.findById(
+                StatsId.builder()
+                        .idPlayer(id)
+                        .season(StringUtils.hasLength(seasonId) ? seasonId: currentlySeasonId)
+                        .build())
+                .or(workaroundFetchPlayerStat(id, seasonId))
+                .orElseThrow(() -> new PlayerStatNotFoundException(id, seasonId));
         return playerMapper.fromStat(stats);
     }
 
@@ -75,7 +80,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public PlayerDTO savePlayer(final Long id, String seasonId, PlayerDTO playerDTO) {
+    public PlayerDTO savePlayer(final UUID id, String seasonId, PlayerDTO playerDTO) {
         playerDTO.setId(String.valueOf(id));
         playerDTO.setSeason(seasonId);
         return savePlayer(playerDTO);
@@ -99,6 +104,22 @@ public class PlayerServiceImpl implements PlayerService {
         return listPlayer.stream()
                 .map(playerMapper::fromPlayer)
                 .collect(Collectors.toList());
+    }
+
+    private Supplier<Optional<Stats>> workaroundFetchPlayerStat(UUID id, String seasonId) {
+        return () -> {
+            final Optional<Player> optionalPlayer = playerRepository.findById(id);
+            if (optionalPlayer.isEmpty()) {
+                return Optional.empty();
+            }
+
+            log.info("There is no Stat entry for this player {}, so lets create one", id);
+            final Player playerFounded = optionalPlayer.orElseThrow();
+            PlayerDTO playerDTO = playerMapper.fromPlayer(playerFounded);
+            final PlayerDTO newStatEntry = this.savePlayer(playerFounded.getId(), seasonId, playerDTO);
+            log.debug("Stat created: {}", newStatEntry);
+            return Optional.of(playerMapper.toStats(newStatEntry));
+        };
     }
 
     private PlayerDTO applyPatchToPlayerDTO(UUID id, JsonPatch jsonPatch, PlayerDTO playerDTO) {

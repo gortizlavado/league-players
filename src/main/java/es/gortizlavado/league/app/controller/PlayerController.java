@@ -50,7 +50,7 @@ public class PlayerController {
     }
 
     @PutMapping("/{id}/{seasonId}")
-    public PlayerDTO savePlayer(@PathVariable Long id, @PathVariable String seasonId, PlayerDTO playerDTO) {
+    public PlayerDTO savePlayer(@PathVariable UUID id, @PathVariable String seasonId, PlayerDTO playerDTO) {
         log.debug("Call savePlayer with id: {}-{} for body: {}", id, seasonId, playerDTO);
         return playerService.savePlayer(id, seasonId, playerDTO);
     }

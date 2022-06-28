@@ -5,7 +5,7 @@ import com.github.fge.jsonpatch.JsonPatch;
 import es.gortizlavado.league.app.dao.PlayerRepository;
 import es.gortizlavado.league.app.dao.StatsRepository;
 import es.gortizlavado.league.app.entity.Player;
-import es.gortizlavado.league.app.entity.Stats;
+import es.gortizlavado.league.app.exceptions.PlayerStatNotFoundException;
 import es.gortizlavado.league.app.mapper.PlayerMapper;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
 import es.gortizlavado.league.app.models.enums.Position;
@@ -17,8 +17,6 @@ import org.flywaydb.test.annotation.FlywayTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
@@ -53,9 +51,6 @@ class PlayerServiceIntegrationTest {
     @Autowired
     private PlayerMapper playerMapper;
 
-    @Captor
-    ArgumentCaptor<Stats> statsCaptor;
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -87,7 +82,6 @@ class PlayerServiceIntegrationTest {
                 .surname("surname2")
                 .fullName("footballer-new lastname2 surname2")
                 .dateOfBirthday(LocalDate.of(1989, 11, 9).toString())
-                .age(32)
                 .position(Position.FORWARD.name())
                 .team(Team.MERIDA_AD.name())
                 .status(Status.ACTIVE.name())
@@ -106,6 +100,64 @@ class PlayerServiceIntegrationTest {
 
         final Optional<Player> playerRepositoryById = playerRepository.findById(idPlayer);
         Assertions.assertNotNull(playerRepositoryById.orElseThrow().getUpdated_at());
+    }
+
+    @Test
+    @FlywayTest(locationsForMigrate = {"loadmsql"}, invokeBaselineDB = true)
+    void shouldDoUpdatePlayerStats_whenPlayerNoHaveStatsYet() throws IOException {
+
+        final long initialCount = statsRepository.count();
+        final Optional<Player> playerByNameOptional = playerRepository.findByName("name3");
+        final UUID idPlayer = playerByNameOptional.orElseThrow().getId();
+
+        JsonPatch patch = JsonPatch.fromJson(objectMapper.readTree("[" +
+                "{ \"op\": \"replace\", \"path\": \"/points\", \"value\": 1 },\n" +
+                "{ \"op\": \"replace\", \"path\": \"/matchPlayed\", \"value\": 1 },\n" +
+                "{ \"op\": \"replace\", \"path\": \"/doubleYellowCards\", \"value\": 1 }\n" +
+                "]"));
+
+        final PlayerDTO playerUpdatedDTO = service.updatePlayer(idPlayer, "2022/2023", patch);
+
+        PlayerDTO expectedPlayerDTO = PlayerDTO.builder()
+                .id(idPlayer.toString())
+                .name("name3")
+                .lastname("lastname3")
+                .surname("surname3")
+                .fullName("name3 lastname3 surname3")
+                .dateOfBirthday(LocalDate.of(1989, 6, 23).toString())
+                .position(Position.GOALKEEPER.name())
+                .team(Team.C_AT_PUEBLONUEVO.name())
+                .status(Status.ACTIVE.name())
+                .season("2022/2023")
+                .points(1)
+                .matchPlayed(1)
+                .goals(0)
+                .goalsConceded(0)
+                .goalsByPenalty(0)
+                .yellowCards(0)
+                .doubleYellowCards(1)
+                .redCards(0)
+                .build();
+
+        Assertions.assertEquals(expectedPlayerDTO, playerUpdatedDTO);
+        Assertions.assertEquals(initialCount+1, statsRepository.count());
+
+        final Optional<Player> playerRepositoryById = playerRepository.findById(idPlayer);
+        Assertions.assertNull(playerRepositoryById.orElseThrow().getUpdated_at()); // There is no update in the Player table
+    }
+
+    @Test
+    @FlywayTest
+    void shouldDoNotUpdatePlayerStats_whenPlayerNoExist() throws IOException {
+
+        JsonPatch patch = JsonPatch.fromJson(objectMapper.readTree("[" +
+                "{ \"op\": \"replace\", \"path\": \"/points\", \"value\": 1 },\n" +
+                "{ \"op\": \"replace\", \"path\": \"/matchPlayed\", \"value\": 1 },\n" +
+                "{ \"op\": \"replace\", \"path\": \"/doubleYellowCards\", \"value\": 1 }\n" +
+                "]"));
+
+        Assertions.assertThrows(PlayerStatNotFoundException.class,
+                () -> service.updatePlayer(UUID.randomUUID(), "2022/2023", patch));
     }
 
 }
