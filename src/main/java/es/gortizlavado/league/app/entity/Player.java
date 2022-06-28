@@ -36,7 +36,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "players")
+@Table(name = "player")
 @TypeDefs({
         @TypeDef(name = "pg-id-uuid", typeClass = PostgresIdUUIDType.class)
 }) // use this to avoid the issue 'unrecognized id type : pg-uuid -> java.util.UUID'

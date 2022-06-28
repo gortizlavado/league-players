@@ -1,7 +1,7 @@
 package es.gortizlavado.league.app.dao;
 
 import es.gortizlavado.league.app.entity.Player;
-import es.gortizlavado.league.app.entity.Stats;
+import es.gortizlavado.league.app.entity.Stat;
 import es.gortizlavado.league.app.entity.StatsId;
 import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
@@ -89,14 +89,14 @@ class PlayerRepositoryTest {
         final UUID uuid = UUID.fromString("00000002-f1b1-11ec-8ea0-0242ac120002");
         final Optional<Player> playerOptional = playerRepository.findById(uuid);
         Assertions.assertTrue(playerOptional.isPresent());
-        final Optional<Stats> stats2019Optional = statsRepository.findById(StatsId.builder()
+        final Optional<Stat> stats2019Optional = statsRepository.findById(StatsId.builder()
                 .idPlayer(playerOptional.get().getId())
                 .season("2019/2020")
                 .build());
         Assertions.assertTrue(stats2019Optional.isPresent());
         Assertions.assertEquals(-6, stats2019Optional.get().getPoints());
 
-        final Optional<Stats> stats2020Optional = statsRepository.findById(StatsId.builder()
+        final Optional<Stat> stats2020Optional = statsRepository.findById(StatsId.builder()
                 .idPlayer(playerOptional.get().getId())
                 .season("2020/2021")
                 .build());
@@ -110,7 +110,7 @@ class PlayerRepositoryTest {
         final long initialCount = statsRepository.count();
 
         UUID newId = UUID.randomUUID();
-        Stats stats = Stats.builder()
+        Stat stat = Stat.builder()
                 .idPlayer(newId)
                 .season("2021/2022")
                 .matchPlayed(1)
@@ -123,7 +123,7 @@ class PlayerRepositoryTest {
                         .team(Team.NO_TEAM)
                         .status(Status.ACTIVE).build()).build();
 
-        statsRepository.save(stats);
+        statsRepository.save(stat);
 
         Assertions.assertEquals(initialCount + 1L, statsRepository.count());
     }

@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS players(
+CREATE TABLE IF NOT EXISTS player(
     id UUID NOT NULL DEFAULT uuid_generate_v1mc (),
     name VARCHAR(15) NOT NULL,
     lastname VARCHAR(15),
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS players(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS stats(
+CREATE TABLE IF NOT EXISTS stat(
     season_id CHARACTER(9) NOT NULL,
     player_id UUID NOT NULL,
     points SMALLINT DEFAULT NULL,
@@ -30,11 +30,11 @@ CREATE TABLE IF NOT EXISTS stats(
     red_cards SMALLINT DEFAULT NULL,
 
     CONSTRAINT pk_stat PRIMARY KEY (season_id, player_id),
-    CONSTRAINT fk_player FOREIGN KEY (player_id) REFERENCES players (id)
+    CONSTRAINT fk_player FOREIGN KEY (player_id) REFERENCES player (id)
 );
 
 CREATE TRIGGER t_player
   BEFORE UPDATE
-  ON players
+  ON player
   FOR EACH ROW
   EXECUTE PROCEDURE upd_timestamp();

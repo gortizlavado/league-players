@@ -8,7 +8,7 @@ import com.github.fge.jsonpatch.JsonPatchException;
 import es.gortizlavado.league.app.dao.PlayerRepository;
 import es.gortizlavado.league.app.dao.StatsRepository;
 import es.gortizlavado.league.app.entity.Player;
-import es.gortizlavado.league.app.entity.Stats;
+import es.gortizlavado.league.app.entity.Stat;
 import es.gortizlavado.league.app.entity.StatsId;
 import es.gortizlavado.league.app.exceptions.JsonPatchCustomException;
 import es.gortizlavado.league.app.exceptions.JsonProcessingCustomException;
@@ -55,14 +55,14 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     @Transactional(readOnly = true)
     public PlayerDTO fetchPlayerStatById(UUID id, String seasonId) {
-        final Stats stats = statsRepository.findById(
+        final Stat stat = statsRepository.findById(
                 StatsId.builder()
                         .idPlayer(id)
                         .season(StringUtils.hasLength(seasonId) ? seasonId: currentlySeasonId)
                         .build())
                 .or(workaroundFetchPlayerStat(id, seasonId))
                 .orElseThrow(() -> new PlayerStatNotFoundException(id, seasonId));
-        return playerMapper.fromStat(stats);
+        return playerMapper.fromStat(stat);
     }
 
     @Override
@@ -95,9 +95,9 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     private PlayerDTO savePlayer(PlayerDTO playerDTO) {
-        Stats stats = playerMapper.toStats(playerDTO);
-        final Stats statsSaved = statsRepository.save(stats);
-        return playerMapper.fromStat(statsSaved);
+        Stat stat = playerMapper.toStats(playerDTO);
+        final Stat statSaved = statsRepository.save(stat);
+        return playerMapper.fromStat(statSaved);
     }
 
     private List<PlayerDTO> fromPlayers(List<Player> listPlayer) {
@@ -106,7 +106,7 @@ public class PlayerServiceImpl implements PlayerService {
                 .collect(Collectors.toList());
     }
 
-    private Supplier<Optional<Stats>> workaroundFetchPlayerStat(UUID id, String seasonId) {
+    private Supplier<Optional<Stat>> workaroundFetchPlayerStat(UUID id, String seasonId) {
         return () -> {
             final Optional<Player> optionalPlayer = playerRepository.findById(id);
             if (optionalPlayer.isEmpty()) {

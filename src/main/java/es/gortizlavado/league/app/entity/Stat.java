@@ -29,8 +29,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "stats")
-public class Stats implements Serializable {
+@Table(name = "stat")
+public class Stat implements Serializable {
 
     @Id
     @Column(name = "season_id")
@@ -71,9 +71,9 @@ public class Stats implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Stats stats = (Stats) o;
-        return season != null && Objects.equals(season, stats.season)
-                && idPlayer != null && Objects.equals(idPlayer, stats.idPlayer);
+        Stat stat = (Stat) o;
+        return season != null && Objects.equals(season, stat.season)
+                && idPlayer != null && Objects.equals(idPlayer, stat.idPlayer);
     }
 
     @Override

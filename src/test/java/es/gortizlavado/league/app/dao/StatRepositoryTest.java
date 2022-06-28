@@ -1,7 +1,7 @@
 package es.gortizlavado.league.app.dao;
 
 import es.gortizlavado.league.app.entity.Player;
-import es.gortizlavado.league.app.entity.Stats;
+import es.gortizlavado.league.app.entity.Stat;
 import es.gortizlavado.league.app.entity.StatsId;
 import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
@@ -51,7 +51,7 @@ class StatRepositoryTest {
                 .status(Status.HURT).build();
         playerRepository.save(player);
 
-        final Stats stats = Stats.builder()
+        final Stat stat = Stat.builder()
                 .season("2020/2021")
                 .player(player)
                 .idPlayer(idPlayerNew)
@@ -59,12 +59,12 @@ class StatRepositoryTest {
                 .goals(1)
                 .redCards(1)
                 .build();
-        statsRepository.save(stats);
+        statsRepository.save(stat);
 
         final Optional<Player> playerOptional = playerRepository.findById(idPlayerNew);
         Assertions.assertTrue(playerOptional.isPresent());
 
-        final Optional<Stats> statsOptional = statsRepository.findById(StatsId.builder()
+        final Optional<Stat> statsOptional = statsRepository.findById(StatsId.builder()
                 .idPlayer(idPlayerNew)
                 .season("2020/2021")
                 .build());
@@ -85,7 +85,7 @@ class StatRepositoryTest {
                 .team(Team.CD_BADAJOZ)
                 .status(Status.HURT).build();
 
-        final Stats stats = Stats.builder()
+        final Stat stat = Stat.builder()
                 .season("2020/2021")
                 .player(player)
                 .idPlayer(idPlayerNew)
@@ -93,12 +93,12 @@ class StatRepositoryTest {
                 .goals(1)
                 .redCards(1)
                 .build();
-        statsRepository.save(stats);
+        statsRepository.save(stat);
 
         final Optional<Player> playerOptional = playerRepository.findById(idPlayerNew);
         Assertions.assertTrue(playerOptional.isPresent());
 
-        final Optional<Stats> statsOptional = statsRepository.findById(StatsId.builder()
+        final Optional<Stat> statsOptional = statsRepository.findById(StatsId.builder()
                 .idPlayer(idPlayerNew)
                 .season("2020/2021")
                 .build());
@@ -116,7 +116,7 @@ class StatRepositoryTest {
         final String newLastname = "new lastname";
         player.setLastname(newLastname);
 
-        final Stats stats = Stats.builder()
+        final Stat stat = Stat.builder()
                 .season("2020/2021")
                 .player(player)
                 .idPlayer(idPlayer)
@@ -124,7 +124,7 @@ class StatRepositoryTest {
                 .goals(1)
                 .redCards(1)
                 .build();
-        statsRepository.save(stats);
+        statsRepository.save(stat);
 
         final Optional<Player> playerOptional = playerRepository.findById(idPlayer);
         Assertions.assertTrue(playerOptional.isPresent());
@@ -144,7 +144,7 @@ class StatRepositoryTest {
                 .status(Status.HURT).build();
         playerRepository.save(player);
 
-        final Optional<Stats> statsOptional = statsRepository.findById(StatsId.builder()
+        final Optional<Stat> statsOptional = statsRepository.findById(StatsId.builder()
                 .idPlayer(idPlayer)
                 .season("2020/2021")
                 .build());

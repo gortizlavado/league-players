@@ -1,7 +1,7 @@
 package es.gortizlavado.league.app.mapper;
 
 import es.gortizlavado.league.app.entity.Player;
-import es.gortizlavado.league.app.entity.Stats;
+import es.gortizlavado.league.app.entity.Stat;
 import es.gortizlavado.league.app.models.dto.PlayerDTO;
 import es.gortizlavado.league.app.models.enums.Position;
 import es.gortizlavado.league.app.models.enums.Status;
@@ -25,7 +25,7 @@ class PlayerMapperTest {
     @Test
     void shouldDoMapperFromStat() {
         final UUID idPlayerNew = UUID.randomUUID();
-        final Stats stats = Stats.builder()
+        final Stat stat = Stat.builder()
                 .season("season")
                 .idPlayer(idPlayerNew)
                 .player(Player.builder()
@@ -64,7 +64,7 @@ class PlayerMapperTest {
                 .doubleYellowCards(0)
                 .redCards(0)
                 .build();
-        Assertions.assertEquals(expectedPlayerDTO, playerMapper.fromStat(stats));
+        Assertions.assertEquals(expectedPlayerDTO, playerMapper.fromStat(stat));
     }
 
     @Test
@@ -124,7 +124,7 @@ class PlayerMapperTest {
                 .doubleYellowCards(0)
                 .redCards(0)
                 .build();
-        final Stats expectedStats = Stats.builder()
+        final Stat expectedStat = Stat.builder()
                 .season("season")
                 .idPlayer(idPlayerNew)
                 .points(10)
@@ -145,7 +145,7 @@ class PlayerMapperTest {
                         .build())
                 .build();
 
-        Assertions.assertEquals(expectedStats, playerMapper.toStats(playerDTO));
+        Assertions.assertEquals(expectedStat, playerMapper.toStats(playerDTO));
     }
 
     @Test
